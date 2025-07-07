@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { forwardRef, useRef } from 'react';
+import { motion, MotionValue, useMotionValue } from 'motion/react';
+import { forwardRef, useEffect, useRef } from 'react';
 
 const Wrapper = ({ children }: { children?: React.ReactNode }) => {
     return (
@@ -26,11 +26,14 @@ const BiggerBox = forwardRef<HTMLDivElement, { children?: React.ReactNode }>(
 const Box = ({
     children,
     biggerBoxRef,
+    x,
 }: {
     children?: React.ReactNode;
     biggerBoxRef: React.RefObject<HTMLDivElement | null>;
     // biggerBoxRef: React.RefObject<HTMLDivElement> | null; 이라고 작성하면 RefObject에 대한 타입이 아닌 그냥 썡 null이 들어가게 됨
     // 밑에 dragConstraints={biggerBoxRef}에서 biggerBoxRef가 null이 될 수 없기 때문에 오류가 발생함
+    x: MotionValue<number>;
+    //MotionValue의 타입
 }) => {
     const boxVariants = {
         start: {},
@@ -45,14 +48,14 @@ const Box = ({
 
     return (
         <motion.div
+            style={{ x }}
             className="w-[200px] h-[200px] bg-white rounded-[40px] shadow-[0_2px_3px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)]"
             variants={boxVariants}
             initial="start"
             animate="end"
             whileHover="hover" // hover는 마우스가 요소 위에 있을 때 적용되는 애니메이션 (variants 내에 정의된 hover 상태를 사용)
             whileTap="click" // click은 요소가 클릭되었을 때 적용되는 애니메이션 (variants 내에 정의된 click 상태를 사용)
-            drag
-            // drag="x"
+            drag="x"
             // dragConstraints={{ left: -200, right: 200, top: -200, bottom: 200 }}
             dragConstraints={biggerBoxRef} // 부모컴포넌트 내부에서만 드래그 가능
             dragSnapToOrigin // 드래그가 끝나면 원래 위치로 돌아감
@@ -69,10 +72,15 @@ const Box = ({
 
 export default function App() {
     const biggerBoxRef = useRef<HTMLDivElement>(null);
+    const x = useMotionValue(0);
+    //애니메이션 이동을 하는데 console.log는 안 뜸 -> 리렌더링 없이 애니메이션만 실행된다는 뜻임 -> ReactJS 생태계에 있는 것이 아닌 것 (엄청난!)
+    useEffect(() => x.onChange(() => console.log(x.get())), [x]); //so 직접 이벤트 리스너를 달아주는 방식으로 제어 가능
     return (
         <Wrapper>
+            <button onClick={() => x.set(200)}>click me</button>
             <BiggerBox ref={biggerBoxRef}>
-                <Box biggerBoxRef={biggerBoxRef}></Box>
+                <Box biggerBoxRef={biggerBoxRef} x={x}></Box>
+                {/* Box태그에 style={{x}}를 작성하여 useMotionValue를 연결할 예정 */}
             </BiggerBox>
         </Wrapper>
     );
