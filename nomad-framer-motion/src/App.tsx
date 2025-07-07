@@ -1,4 +1,9 @@
-import { motion, MotionValue, useMotionValue } from 'motion/react';
+import {
+    motion,
+    MotionValue,
+    useMotionValue,
+    useTransform,
+} from 'motion/react';
 import { forwardRef, useEffect, useRef } from 'react';
 
 const Wrapper = ({ children }: { children?: React.ReactNode }) => {
@@ -27,6 +32,7 @@ const Box = ({
     children,
     biggerBoxRef,
     x,
+    potato, // useTransform을 통해 변환된 값
 }: {
     children?: React.ReactNode;
     biggerBoxRef: React.RefObject<HTMLDivElement | null>;
@@ -34,6 +40,7 @@ const Box = ({
     // 밑에 dragConstraints={biggerBoxRef}에서 biggerBoxRef가 null이 될 수 없기 때문에 오류가 발생함
     x: MotionValue<number>;
     //MotionValue의 타입
+    potato: MotionValue<number>;
 }) => {
     const boxVariants = {
         start: {},
@@ -48,7 +55,7 @@ const Box = ({
 
     return (
         <motion.div
-            style={{ x }}
+            style={{ x, scale: potato }}
             className="w-[200px] h-[200px] bg-white rounded-[40px] shadow-[0_2px_3px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)]"
             variants={boxVariants}
             initial="start"
@@ -74,12 +81,14 @@ export default function App() {
     const biggerBoxRef = useRef<HTMLDivElement>(null);
     const x = useMotionValue(0);
     //애니메이션 이동을 하는데 console.log는 안 뜸 -> 리렌더링 없이 애니메이션만 실행된다는 뜻임 -> ReactJS 생태계에 있는 것이 아닌 것 (엄청난!)
-    useEffect(() => x.onChange(() => console.log(x.get())), [x]); //so 직접 이벤트 리스너를 달아주는 방식으로 제어 가능
+    const potato = useTransform(x, [-800, 0, 800], [5, 1, 0.1]);
+    //useMotionValue() px의 단위를 변환시켜줌 (-800~800을 5~0.1로 변환)
+    useEffect(() => x.onChange(() => console.log(potato.get())), [x]);
     return (
         <Wrapper>
             <button onClick={() => x.set(200)}>click me</button>
             <BiggerBox ref={biggerBoxRef}>
-                <Box biggerBoxRef={biggerBoxRef} x={x}></Box>
+                <Box biggerBoxRef={biggerBoxRef} x={x} potato={potato}></Box>
                 {/* Box태그에 style={{x}}를 작성하여 useMotionValue를 연결할 예정 */}
             </BiggerBox>
         </Wrapper>
