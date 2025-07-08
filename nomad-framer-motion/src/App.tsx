@@ -1,108 +1,52 @@
-import {
-    motion,
-    MotionValue,
-    useMotionValue,
-    useScroll,
-    useTransform,
-} from 'motion/react';
-import { forwardRef, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
+import { forwardRef, useRef } from 'react';
 
-const Wrapper = forwardRef<
-    HTMLDivElement,
-    { children?: React.ReactNode; gradient: MotionValue<string> }
->(({ children, gradient }, ref) => {
-    return (
-        <motion.div
-            ref={ref}
-            className="h-[200dvh] w-full flex justify-center items-center"
-            style={{
-                background: gradient,
-            }}
-        >
-            {children}
-        </motion.div>
-    );
-});
-
-const Box = ({
-    children,
-    wrapperRef,
-    x,
-    potato, // useTransform을 통해 변환된 값
-    scale, // 스크롤 위치를 나타내는 MotionValue
-}: {
-    children?: React.ReactNode;
-    wrapperRef: React.RefObject<HTMLDivElement | null>;
-    x: MotionValue<number>;
-    //MotionValue의 타입
-    potato: MotionValue<number>;
-    scale: MotionValue<number>;
-}) => {
-    const boxVariants = {
-        start: {},
-        end: {},
-        drag: {
-            backgroundColor: 'rgba(255, 150, 0, 1)',
-            transition: { duration: 0.2 },
-        },
-    };
-
-    return (
-        <motion.div
-            style={{ x, rotateZ: potato, scale }}
-            className="w-[200px] h-[200px] bg-white rounded-[40px] shadow-[0_2px_3px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)]"
-            variants={boxVariants}
-            initial="start"
-            animate="end"
-            whileHover="hover" // hover는 마우스가 요소 위에 있을 때 적용되는 애니메이션 (variants 내에 정의된 hover 상태를 사용)
-            drag="x"
-            dragConstraints={wrapperRef}
-            dragSnapToOrigin // 드래그가 끝나면 원래 위치로 돌아감
-            dragElastic={0}
-            // 드래그 제한 범위 바깥에서 얼마나 탄력적으로 움직일지 설정
-            // 1이면 100퍼센트, 전 범위까지 드래그 가능 / 0이면 제한범위 내에서 벗어나질 않음 (벽에 접함)
-            whileDrag="drag"
-        >
-            {/* 이 때 start, end등의 이름은 variants내의 프로퍼티로 들어가게 됨 */}
-            {children}
-        </motion.div>
-    );
-};
+const Wrapper = forwardRef<HTMLDivElement, { children?: React.ReactNode }>(
+    ({ children }, ref) => {
+        return (
+            <motion.div
+                ref={ref}
+                className="h-full w-full flex justify-center items-center bg-blue-300"
+            >
+                {children}
+            </motion.div>
+        );
+    },
+);
 
 export default function App() {
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const x = useMotionValue(0);
-    //애니메이션 이동을 하는데 console.log는 안 뜸 -> 리렌더링 없이 애니메이션만 실행된다는 뜻임 -> ReactJS 생태계에 있는 것이 아닌 것 (엄청난!)
-    const potato = useTransform(x, [-800, 800], [-360, 360]);
-    const gradient = useTransform(
-        x,
-        [-800, 0, 800],
-        [
-            'linear-gradient(135deg, rgb(0, 238, 198), rgb(0, 146, 85))',
-            'linear-gradient(135deg, rgb(238,0,154), rgb(244, 145, 251))',
-            'linear-gradient(135deg, rgb(234, 238, 0), rgb(241, 124, 0))',
-        ],
-    );
-    //useMotionValue() px의 단위를 변환시켜줌2 => 문자열로도 변환이 가능 -> 색깔변화에도 활용 가능, 다만 이건 tailwindcss로 불가능
-    const { scrollY, scrollYProgress } = useScroll();
-    //useScroll() 스크롤 위치를 가져오는 훅, scrollY는 px단위, scrollYProgress는 0~1사이의 값으로 스크롤 위치를 나타냄
-    const scale = useTransform(scrollYProgress, [0, 1], [0, 3]);
-    useEffect(() => {
-        scrollY.on('change', () =>
-            console.log(scrollY.get(), scrollYProgress.get()),
-        );
-    }, [scrollYProgress, scrollY]);
-
+    const svgVariants = {
+        start: {
+            pathLength: 0,
+            fill: 'rgba(255,255,255,0)',
+        },
+        end: {
+            pathLength: 1,
+            fill: 'rgba(255,255,255,1)',
+            // transition: { duration: 2 }, //transition은 end에 들어감
+        },
+    };
     return (
-        <Wrapper ref={wrapperRef} gradient={gradient}>
-            <button onClick={() => x.set(200)}>click me</button>
-            <Box
-                x={x}
-                wrapperRef={wrapperRef}
-                potato={potato}
-                scale={scale}
-            ></Box>
-            {/* Box태그에 style={{x}}를 작성하여 useMotionValue를 연결할 예정 */}
+        <Wrapper ref={wrapperRef}>
+            <svg
+                className="w-[300px] h-[300px]"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 448 512"
+            >
+                <motion.path
+                    variants={svgVariants}
+                    initial="start"
+                    animate="end"
+                    transition={{
+                        default: { duration: 6 }, //모든 속성에 대한 기본 지속 시간
+                        fill: { duration: 2, delay: 2 }, //특정 속성에 대한 지속시간을 이렇게 따로 설정 가능 (varaints가 아닌, 여기서 직접 설정해주어야 함)
+                    }}
+                    stroke="white" //svg의 외곽선 설정
+                    strokeWidth="5"
+                    d="M224 373.1c-25.2-31.7-40.1-59.4-45-83.2-22.6-88 112.6-88 90.1 0-5.5 24.3-20.3 52-45 83.2zm138.2 73.2c-42.1 18.3-83.7-10.9-119.3-50.5 103.9-130.1 46.1-200-18.9-200-54.9 0-85.2 46.5-73.3 100.5 6.9 29.2 25.2 62.4 54.4 99.5-32.5 36.1-60.6 52.7-85.2 54.9-50 7.4-89.1-41.1-71.3-91.1 15.1-39.2 111.7-231.2 115.9-241.6 15.8-30.1 25.6-57.4 59.4-57.4 32.3 0 43.4 25.9 60.4 59.9 36 70.6 89.4 177.5 114.8 239.1 13.2 33.1-1.4 71.3-37 86.6zm47-136.1C280.3 35.9 273.1 32 224 32c-45.5 0-64.9 31.7-84.7 72.8C33.2 317.1 22.9 347.2 22 349.8-3.2 419.1 48.7 480 111.6 480c21.7 0 60.6-6.1 112.4-62.4 58.7 63.8 101.3 62.4 112.4 62.4 62.9 .1 114.9-60.9 89.6-130.2 0-3.9-16.8-38.9-16.8-39.6z"
+                />
+            </svg>
         </Wrapper>
     );
 }
