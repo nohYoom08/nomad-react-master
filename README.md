@@ -6,7 +6,7 @@ CRA + typescript + styled-components + recoil + useForm() 활용법이 단원별
 
 ## nomad-framer-motion
 애니메이션 라이브러리인 framer-motion의 관한 클론코딩 자료이다.<br>
-활용한 라이브러리에는 아래표와 같이 실제 강의와 차이가 있다.
+다만 아래표와 같이 실제 강의와 라이브러리 차이가 있다.
 | 강좌                              | 실제 코드                                             |
 |-----------------------------------|--------------------------------------------------|
 | framer-motion | motion      |
